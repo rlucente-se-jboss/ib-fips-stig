@@ -1,0 +1,4 @@
+*.bak
+*.toml
+*.qcow2
+*.vmdk
