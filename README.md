@@ -32,17 +32,17 @@ The above scripts install and enable the web console and image builder.
 Once you've run the above scripts successfully, setup is complete.
 
 ## Demo
-Set the password hash for the administrative user.
+Generate the blueprint file to apply the DISA STIG.
 
-    . demo.conf
-    export RHEL_PASS_HASH="$(openssl passwd -6 ${RHEL_PASS})"
+    oscap xccdf generate fix \
+        --profile xccdf_org.ssgproject.content_profile_stig \
+        --fix-type blueprint /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml \
+	> fips-stig-blueprint.toml
 
-Update the blueprint file based on the environment variables and the
-blueprint template.
+Update the blueprint file based on the environment variables to add an
+adminstrative user.
 
-    envsubst '${RHEL_USER} ${RHEL_PASS_HASH}' \
-        < fips-stig-blueprint.toml.template \
-        > fips-stig-blueprint.toml
+    ./03-add-user.sh fips-stig-blueprint.toml
 
 Push the blueprint file to image-builder and start building the image.
 

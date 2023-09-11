@@ -4,6 +4,7 @@
 
 [[ $EUID -ne 0 ]] && exit_on_error "Must run as root"
 
+[[ $? -ne 1 -o 
 subscription-manager register \
     --username $USERNAME --password $PASSWORD || exit 1
 subscription-manager role --set="Red Hat Enterprise Linux Server"
