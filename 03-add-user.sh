@@ -11,6 +11,6 @@ cat >> "$1" << EOF
 [[customizations.user]]
 name = "${RHEL_USER}"
 description = "Admin User"
-password = "${RHEL_PASS_HASH}"
+password = "$(openssl passwd -6 ${RHEL_PASS})"
 groups = ["wheel"]
 EOF
