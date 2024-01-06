@@ -159,7 +159,7 @@ prompted to start the installation, press <TAB> and then add the kernel
 command line parameters identified above. Hit <ENTER> to automate the
 rest of the installation.
 
-# Evaluate the edge device against the STIG
+## Evaluate the edge device against the STIG
 Once the edge device has rebooted, log in using the credentials defined
 in the `demo.conf` file in this repository. Use the following command
 to generate a STIG evaluation report.
