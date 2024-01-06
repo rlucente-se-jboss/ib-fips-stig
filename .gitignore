@@ -3,5 +3,4 @@
 *.qcow2
 *.vmdk
 *.iso
-*.html
 *.ks

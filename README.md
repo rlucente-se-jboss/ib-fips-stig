@@ -169,3 +169,6 @@ to generate a STIG evaluation report.
        /usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml
 
 You can then download the generated `stig_report.html` file to review it.
+
+An [example report](stig_report.html) is included with this github repository, but your
+mileage may vary.
