@@ -88,6 +88,20 @@ autofs are not installed by default for an ostree type.
     # disabled = ["kdump","autofs","debug-shell"]
     disabled = ["debug-shell"]
 
+### Apply quick and dirty STIG remediations
+Quick and dirty STIG remediations can be appended to the
+blueprint file. These replace the entire contents of the file using
+`customizations.files` stanzas even though a single line change would
+be sufficient.
+
+The remediations included here target all but two of the severity "high"
+STIG findings. The remaining two require modifying the `/boot` partition
+via the `grubby` command.
+
+To append the STIG remediations, use the following command.
+
+    cat severity-high-snippet.txt >> pre-stig-blueprint.toml
+
 ### Build the rpm-ostree image
 Push the modified blueprint and initiate the build of the rpm-ostree
 image. The following commands will compose an rpm-ostree image. This
