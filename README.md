@@ -94,9 +94,9 @@ blueprint file. These replace the entire contents of the file using
 `customizations.files` stanzas even though a single line change would
 be sufficient.
 
-The remediations included here target all but two of the severity "high"
-STIG findings. The remaining two require modifying the `/boot` partition
-via the `grubby` command.
+The remediations included here target all but four of the severity "high"
+STIG findings. Some of the remaining items require modifying the `/boot`
+partition via the `grubby` command.
 
 To append the STIG remediations, use the following command.
 
