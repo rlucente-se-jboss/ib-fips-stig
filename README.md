@@ -127,7 +127,7 @@ the kernel command line plus the parameters to enable FIPS mode and pull
 the remotely hosted kickstart file. The full list of kernel parameters
 to be added is shown below.
 
-    slub_debug=P page_poison=1 vsyscall=none pti=on audit_backlog_limit=8192 audit=1 fips=1 inst.ks=http://<HOSTIP>:8000/pre-stig.ks
+    slub_debug=P page_poison=1 vsyscall=none pti=on audit_backlog_limit=8192 audit=1 fips=1 inst.ks=http://HOSTIP:8000/pre-stig.ks
 
 The HOSTIP value should match the IP address of the image-builder
 host. This value is conveniently calculated in the `demo.conf` file.
@@ -147,11 +147,11 @@ you can simply hit TAB to get the UUID. Otherwise, determine the UUID
 by listing the finished composes.
 
     composer-cli compose status
-    composer-cli compose image <IMAGE-UUID>
+    composer-cli compose image IMAGE-UUID
 
 Expand the rpm-ostree content and link to the kickstart file.
 
-    tar xvf <IMAGE-UUID>-commit.tar
+    tar xvf IMAGE-UUID-commit.tar
     ln -s /path/to/ib-fips-stig/pre-stig.ks .
 
 Run a local web server to provide the rpm-ostree and kickstart content
