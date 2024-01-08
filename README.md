@@ -16,7 +16,7 @@ following script both to register and update the system.
 
     cd /path/to/ib-fips-stig
     sudo ./register-and-update.sh
-    reboot
+    sudo reboot
 
 After the system reboots, simply run the script to install image-builder:
 
@@ -46,12 +46,6 @@ Add the following stanza to the list of packages:
     [[packages]]
     name = "scap-security-guide"
     version = "*"
-
-Comment out the following stanza, as this package is not available in the standard RHEL repositories.
-
-    # [[packages ]]
-    # name = "MFEhiplsm"
-    # version = "*"
 
 Comment out the following stanza, as shown below, since kernel boot
 parameter customizations are not supported for ostree types.
