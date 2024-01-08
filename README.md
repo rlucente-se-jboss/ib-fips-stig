@@ -127,7 +127,13 @@ the kernel command line plus the parameters to enable FIPS mode and pull
 the remotely hosted kickstart file. The full list of kernel parameters
 to be added is shown below.
 
-    slub_debug=P page_poison=1 vsyscall=none pti=on audit_backlog_limit=8192 audit=1 fips=1 inst.ks=http://localhost:8000/pre-stig.ks
+    slub_debug=P page_poison=1 vsyscall=none pti=on audit_backlog_limit=8192 audit=1 fips=1 inst.ks=http://<HOSTIP>:8000/pre-stig.ks
+
+The HOSTIP value should match the IP address of the image-builder
+host. This value is conveniently calculated in the `demo.conf` file.
+
+    . demo.conf
+    echo $HOSTIP
 
 ### Host the rpm-ostree content
 Create a directory to hold the kickstart and the rpm-ostree compose for
