@@ -37,8 +37,8 @@ network --bootproto=dhcp --noipv6
 user --name=${EDGE_USER} --groups=wheel --iscrypted --password=${EDGE_HASH} --homedir=/var/home/core
 
 # set up the OSTree-based install with disabled GPG key verification, the base
-# URL to pull the installation content, 'centos' as the management root in the
-# repo, and 'centos/8/x86_64/edge' as the branch for the installation
-ostreesetup --nogpg --url=http://${HOSTIP}:8000/repo/ --osname=centos --remote=edge --ref=centos/9/x86_64/edge
+# URL to pull the installation content, 'rhel' as the management root in the
+# repo, and 'rhel/9/x86_64/edge' as the branch for the installation
+ostreesetup --nogpg --url=http://${HOSTIP}:8000/repo/ --osname=rhel --remote=edge --ref=rhel/9/x86_64/edge
 
 EOF

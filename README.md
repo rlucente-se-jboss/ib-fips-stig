@@ -1,20 +1,21 @@
 # Image Builder with FIPS and STIG
 
 ## Pre-demo setup 
-Start with a minimal install of CentOS Stream 9 on baremetal or on a
-VM. Make sure this repository is on your host using either `git clone`
-or secure copy (`scp`).
+Start with a minimal install of RHEL 9.3 on baremetal or on a VM. Make
+sure this repository is on your host using either `git clone` or secure
+copy (`scp`).
 
-During CentOS Stream installation, configure a regular user with `sudo`
+During RHEL installation, configure a regular user with `sudo`
 privileges on the host. These instructions assume that this repository is
 cloned or copied to your user's home directory on the host.
 
-Login to the host using `ssh` and then run the first script both to
-register and update the system.
+Login to the host using `ssh`. Make sure that the username and password
+are correct in the `demo.conf` file to authenticate to the
+[Red Hat Customer Portal](https://access.redhat.com) and then run the
+following script both to register and update the system.
 
     cd /path/to/ib-fips-stig
-    sudo dnf -y update
-    sudo dny -y clean all
+    sudo ./register-and-update.sh
     reboot
 
 After the system reboots, simply run the script to install image-builder:
@@ -33,7 +34,7 @@ image from image-builder.
     oscap xccdf generate fix \
         --fetch-remote-resources \
         --profile xccdf_org.ssgproject.content_profile_stig \
-        --fix-type blueprint /usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml \
+        --fix-type blueprint /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml \
 	> pre-stig-blueprint.toml
 
 ### Cleanup the generated blueprint file
@@ -46,7 +47,7 @@ Add the following stanza to the list of packages:
     name = "scap-security-guide"
     version = "*"
 
-Comment out the following stanza, as this package is not available in the standard CentOS Stream repositories.
+Comment out the following stanza, as this package is not available in the standard RHEL repositories.
 
     # [[packages ]]
     # name = "MFEhiplsm"
@@ -160,7 +161,7 @@ to support edge device installs.
     python3 -m http.server 8000
 
 ### Install the edge device
-Boot an edge device using a CentOS Stream installation image. When
+Boot an edge device using a RHEL installation image. When
 prompted to start the installation, press <TAB> and then add the kernel
 command line parameters identified above. Hit <ENTER> to automate the
 rest of the installation.
@@ -172,7 +173,7 @@ to generate a STIG evaluation report.
 
    sudo oscap xccdf eval --report stig_report.html \
        --profile xccdf_org.ssgproject.content_profile_stig \
-       /usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml
+       /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
 
 You can then download the generated `stig_report.html` file to review it.
 
