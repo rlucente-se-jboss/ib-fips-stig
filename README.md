@@ -165,9 +165,9 @@ Once the edge device has rebooted, log in using the credentials defined
 in the `demo.conf` file in this repository. Use the following command
 to generate a STIG evaluation report.
 
-   sudo oscap xccdf eval --report stig_report.html \
-       --profile xccdf_org.ssgproject.content_profile_stig \
-       /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+    sudo oscap xccdf eval --report stig_report.html \
+        --profile xccdf_org.ssgproject.content_profile_stig \
+        /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
 
 You can then download the generated `stig_report.html` file to review it.
 
