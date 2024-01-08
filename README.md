@@ -143,7 +143,7 @@ installation to the edge device.
     cd ~/pre-stig-content
 
 Download the built rpm-ostree image content. If there is only one compose,
-you can simply hit <TAB> to get the UUID. Otherwise, determine the UUID
+you can simply hit TAB to get the UUID. Otherwise, determine the UUID
 by listing the finished composes.
 
     composer-cli compose status
@@ -161,8 +161,8 @@ to support edge device installs.
 
 ### Install the edge device
 Boot an edge device using a CentOS Stream installation image. When
-prompted to start the installation, press <TAB> and then add the kernel
-command line parameters identified above. Hit <ENTER> to automate the
+prompted to start the installation, press TAB and then add the kernel
+command line parameters identified above. Hit ENTER to automate the
 rest of the installation.
 
 ## Evaluate the edge device against the STIG
