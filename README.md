@@ -9,13 +9,13 @@ During CentOS Stream installation, configure a regular user with `sudo`
 privileges on the host. These instructions assume that this repository is
 cloned or copied to your user's home directory on the host.
 
-Login to the host using `ssh` and then run the first script both to
-register and update the system.
+Login to the host using `ssh` and then run the following commands to
+update the system.
 
     cd /path/to/ib-fips-stig
     sudo dnf -y update
     sudo dny -y clean all
-    reboot
+    sudo reboot
 
 After the system reboots, simply run the script to install image-builder:
 
