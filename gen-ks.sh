@@ -34,7 +34,7 @@ text
 network --bootproto=dhcp --noipv6
 
 # Kickstart requires that we create a default user with sudo privileges
-user --name=${EDGE_USER} --groups=wheel --iscrypted --password=${EDGE_HASH} --homedir=/var/home/core
+user --name ${EDGE_USER} --groups wheel --iscrypted --password ${EDGE_HASH} --homedir /var/home/core
 
 # set up the OSTree-based install with disabled GPG key verification, the base
 # URL to pull the installation content, 'centos' as the management root in the
