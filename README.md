@@ -6,8 +6,8 @@ VM. Make sure this repository is on your host using either `git clone`
 or secure copy (`scp`).
 
 During CentOS Stream installation, configure a regular user with `sudo`
-privileges on the host. These instructions assume that this repository is
-cloned or copied to your user's home directory on the host.
+privileges on the host. These instructions assume that this repository
+is cloned or copied to your user's home directory on the host.
 
 Login to the host using `ssh` and then run the following commands to
 update the system.
@@ -45,12 +45,6 @@ Add the following stanza to the list of packages:
     [[packages]]
     name = "scap-security-guide"
     version = "*"
-
-Comment out the following stanza, as this package is not available in the standard CentOS Stream repositories.
-
-    # [[packages ]]
-    # name = "MFEhiplsm"
-    # version = "*"
 
 Comment out the following stanza, as shown below, since kernel boot
 parameter customizations are not supported for ostree types.
