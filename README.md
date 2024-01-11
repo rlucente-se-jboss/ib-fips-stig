@@ -14,8 +14,11 @@ update the system.
 
     cd /path/to/ib-fips-stig
     sudo dnf -y update
-    sudo dny -y clean all
+    sudo dnf -y clean all
     sudo reboot
+
+In the above commands, `/path/to/ib-fips-stig` should match the file
+path to your `ib-fips-stig` directory.
 
 After the system reboots, simply run the script to install image-builder:
 
@@ -27,8 +30,8 @@ Once you've run the above scripts successfully, setup is complete.
 
 ## Demo
 ### Generate the blueprint file
-Generate the blueprint file to apply the DISA STIG to the rpm-ostree
-image from image-builder.
+Generate the blueprint file to prepare the rpm-ostree image to comply
+with some of the controls in the DISA STIG.
 
     oscap xccdf generate fix \
         --fetch-remote-resources \
@@ -108,26 +111,31 @@ image.
 
     ./gen-ks.sh
 
-### Identify the kernel command line parameters
-Review the generated blueprint file and identify the kernel command line
-parameters. Find the following stanza in the `pre-stig-blueprint.toml`
-file.
+### Prepare the boot ISO
+As a workaround to enable FIPS mode, we'll modify an existing CentOS
+Stream boot ISO to include the generated kickstart and updated kernel
+command line parameters. First, download the [CentOS Stream boot ISO](https://mirrors.centos.org/mirrorlist?path=/9-stream/BaseOS/x86_64/iso/CentOS-Stream-9-latest-x86_64-boot.iso&redirect=1&protocol=https).
 
-    # [customizations.kernel]
-    # append = "slub_debug=P page_poison=1 vsyscall=none pti=on audit_backlog_limit=8192 audit=1"
-
-When installing the edge device later, you'll add the above parameters to
-the kernel command line plus the parameters to enable FIPS mode and pull
-the remotely hosted kickstart file. The full list of kernel parameters
-to be added is shown below.
-
-    slub_debug=P page_poison=1 vsyscall=none pti=on audit_backlog_limit=8192 audit=1 fips=1 inst.ks=http://HOSTIP:8000/pre-stig.ks
-
-The HOSTIP value should match the IP address of the image-builder
-host. This value is conveniently calculated in the `demo.conf` file.
+Modify the ISO using the following commands to extract the kernel boot
+parameters from the generated blueprint file and point to the correct
+host to pull the rpm-ostree content.
 
     . demo.conf
-    echo $HOSTIP
+    KERNEL_ARGS="$(grep -A1 kernel pre-stig-blueprint.toml | \
+        grep append | cut -d\" -f2)"
+    KERNEL_ARGS="$KERNEL_ARGS fips=1" 
+
+    sudo mkksiso \
+        -c "${KERNEL_ARGS}" \
+        --ks pre-stig.ks \
+        /path/to/CentOS-Stream-9-latest-x86_64-boot.iso \
+        pre-stig.iso
+
+In the above commands, `/path/to/` should match the file path to
+the directory holding the downloaded boot ISO. The HOSTIP value is
+determined by the `demo.conf` file and it should match the IP address
+of the image-builder host. Make sure this value is correct in the
+`demo.conf` file.
 
 ### Host the rpm-ostree content
 Create a directory to hold the kickstart and the rpm-ostree compose for
@@ -143,21 +151,16 @@ by listing the finished composes.
     composer-cli compose status
     composer-cli compose image IMAGE-UUID
 
-Expand the rpm-ostree content and link to the kickstart file.
+Expand the rpm-ostree content and launch a very simple local web server
+to provide the rpm-ostree content to support edge device installs.
 
     tar xvf IMAGE-UUID-commit.tar
-    ln -s /path/to/ib-fips-stig/pre-stig.ks .
-
-Run a local web server to provide the rpm-ostree and kickstart content
-to support edge device installs.
-
     python3 -m http.server 8000
 
 ### Install the edge device
-Boot an edge device using a CentOS Stream installation image. When
-prompted to start the installation, press TAB and then add the kernel
-command line parameters identified above. Hit ENTER to automate the
-rest of the installation.
+Boot an edge device using the `pre-stig.iso` installer. The installation
+should occur automatically without user intervention. You can push ENTER
+to kick things off if you don't want to wait for the timer to expire.
 
 ## Evaluate the edge device against the STIG
 Once the edge device has rebooted, log in using the credentials defined
