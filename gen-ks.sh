@@ -33,6 +33,10 @@ text
 # activate network devices and configure with DHCP
 network --bootproto=dhcp --noipv6
 
+# ensure kdump is disabled
+%addon com_redhat_kdump --disable
+%end
+
 # Kickstart requires that we create a default user with sudo privileges
 user --name=${EDGE_USER} --groups=wheel --iscrypted --password=${EDGE_HASH} --homedir=/var/home/core
 
