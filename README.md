@@ -131,6 +131,7 @@ host to pull the rpm-ostree content.
         --ks pre-stig.ks \
         /path/to/rhel-9.3-x86_64-boot.iso \
         pre-stig.iso
+    sudo chown $USER: pre-stig.iso
 
 In the above commands, `/path/to/` should match the file path to
 the directory holding the downloaded boot ISO. The HOSTIP value is
@@ -164,15 +165,57 @@ should occur automatically without user intervention. You can push ENTER
 to kick things off if you don't want to wait for the time to expire.
 
 ## Evaluate the edge device against the STIG
-Once the edge device has rebooted, log in using the credentials defined
-in the `demo.conf` file in this repository. Use the following command
-to generate a STIG evaluation report.
+Wait for the edge device to reboot following the installation.
 
-    sudo oscap xccdf eval --report stig_report.html \
+### Generate a tailoring file
+When doing STIG evaluations, the rules being applied can be tailored to
+specific controls. The following script uses the `autotailor` command
+to limit the remediation to a handful of high severity rules. On the
+image-builder host, run the following command to create the tailoring file.
+
+    ./generate-tailor-file.sh
+
+Copy the generated file, `ssg-rhel9-ds-tailoring-high-only.xml`, to the
+edge device.
+
+### Evaluate before any remediation
+Log in using the credentials defined in the `demo.conf` file and then
+use the following command to generate a STIG evaluation report before
+any remediation occurs.
+
+    sudo oscap xccdf eval \
+        --report stig_report_pre_remediation.html \
         --profile xccdf_org.ssgproject.content_profile_stig \
         /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
 
-You can then download the generated `stig_report.html` file to review it.
+You can then download the generated `stig_report_pre_remediation.html`
+file to review it.
 
-An [example report](stig_report.html) is included with this github repository, but your
-mileage may vary.
+### Remediate using the tailoring file
+Remediate the high severity STIG failures by using the tailoring file. Use
+the following commands to apply the remediations and reboot the system.
+
+    sudo oscap xccdf eval \
+        --remediate \
+        --tailoring-file ssg-rhel9-ds-tailoring-high-only.xml \
+        --profile xccdf_org.ssgproject.content_profile_stig_high_only \
+        /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+
+    sudo reboot
+
+### Re-evaluate after the remediation
+Log back in to the edge device and then use the following command to
+generate a STIG evaluation report after the remediation has run.
+
+    sudo oscap xccdf eval \
+        --report stig_report_post_remediation.html \
+        --profile xccdf_org.ssgproject.content_profile_stig \
+        /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+
+You can then download the generated `stig_report_post_remediation.html`
+file to review it.
+
+### Summary
+Both the [pre](stig_report_pre_remediation.html) and
+[post](stig_report_post_remediation.html) STIG reports are included with
+this github repository, but your mileage may vary.
