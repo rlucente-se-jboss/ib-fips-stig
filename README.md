@@ -18,6 +18,9 @@ following script both to register and update the system.
     sudo ./register-and-update.sh
     sudo reboot
 
+In the above commands, `/path/to/ib-fips-stig` should match the file
+path to your `ib-fips-stig` directory.
+
 After the system reboots, simply run the script to install image-builder:
 
     sudo ./config-image-builder.sh
@@ -28,8 +31,8 @@ Once you've run the above scripts successfully, setup is complete.
 
 ## Demo
 ### Generate the blueprint file
-Generate the blueprint file to apply the DISA STIG to the rpm-ostree
-image from image-builder.
+Generate the blueprint file to prepare the rpm-ostree image to comply
+with some of the controls in the DISA STIG.
 
     oscap xccdf generate fix \
         --fetch-remote-resources \
@@ -88,20 +91,6 @@ autofs are not installed by default for an ostree type.
     # disabled = ["kdump","autofs","debug-shell"]
     disabled = ["debug-shell"]
 
-### Apply quick and dirty STIG remediations
-Quick and dirty STIG remediations can be appended to the
-blueprint file. These replace the entire contents of the file using
-`customizations.files` stanzas even though a single line change would
-be sufficient.
-
-The remediations included here target all but four of the severity "high"
-STIG findings. Some of the remaining items require modifying the `/boot`
-partition via the `grubby` command.
-
-To append the STIG remediations, use the following command.
-
-    cat severity-high-snippet.txt >> pre-stig-blueprint.toml
-
 ### Build the rpm-ostree image
 Push the modified blueprint and initiate the build of the rpm-ostree
 image. The following commands will compose an rpm-ostree image. This
@@ -123,26 +112,31 @@ image.
 
     ./gen-ks.sh
 
-### Identify the kernel command line parameters
-Review the generated blueprint file and identify the kernel command line
-parameters. Find the following stanza in the `pre-stig-blueprint.toml`
-file.
+### Prepare the boot ISO
+As a workaround to enable FIPS mode, we'll modify an existing
+RHEL 9.3 boot ISO to include the generated kickstart and updated
+kernel command line parameters. First, download the [RHEL 9.3 boot ISO](https://access.redhat.com/downloads/content/rhel).
 
-    # [customizations.kernel]
-    # append = "slub_debug=P page_poison=1 vsyscall=none pti=on audit_backlog_limit=8192 audit=1"
-
-When installing the edge device later, you'll add the above parameters to
-the kernel command line plus the parameters to enable FIPS mode and pull
-the remotely hosted kickstart file. The full list of kernel parameters
-to be added is shown below.
-
-    slub_debug=P page_poison=1 vsyscall=none pti=on audit_backlog_limit=8192 audit=1 fips=1 inst.ks=http://HOSTIP:8000/pre-stig.ks
-
-The HOSTIP value should match the IP address of the image-builder
-host. This value is conveniently calculated in the `demo.conf` file.
+Modify the ISO using the following commands to extract the kernel boot
+parameters from the generated blueprint file and point to the correct
+host to pull the rpm-ostree content.
 
     . demo.conf
-    echo $HOSTIP
+    KERNEL_ARGS="$(grep -A1 kernel pre-stig-blueprint.toml | \
+        grep append | cut -d\" -f2)"
+    KERNEL_ARGS="$KERNEL_ARGS fips=1"
+
+    sudo mkksiso \
+        -c "${KERNEL_ARGS}" \
+        --ks pre-stig.ks \
+        /path/to/rhel-9.3-x86_64-boot.iso \
+        pre-stig.iso
+
+In the above commands, `/path/to/` should match the file path to
+the directory holding the downloaded boot ISO. The HOSTIP value is
+determined by the `demo.conf` file and it should match the IP address
+of the image-builder host. Make sure this value is correct in the
+`demo.conf` file.
 
 ### Host the rpm-ostree content
 Create a directory to hold the kickstart and the rpm-ostree compose for
@@ -158,21 +152,16 @@ by listing the finished composes.
     composer-cli compose status
     composer-cli compose image IMAGE-UUID
 
-Expand the rpm-ostree content and link to the kickstart file.
+Expand the rpm-ostree content and launch a very simple local web server
+to provide the rpm-ostree content to support edge device installs.
 
     tar xvf IMAGE-UUID-commit.tar
-    ln -s /path/to/ib-fips-stig/pre-stig.ks .
-
-Run a local web server to provide the rpm-ostree and kickstart content
-to support edge device installs.
-
     python3 -m http.server 8000
 
 ### Install the edge device
-Boot an edge device using a RHEL installation image. When
-prompted to start the installation, press TAB and then add the kernel
-command line parameters identified above. Hit ENTER to automate the
-rest of the installation.
+Boot an edge device using the `pre-stig.iso` installer. The installation
+should occur automatically without user intervention. You can push ENTER
+to kick things off if you don't want to wait for the time to expire.
 
 ## Evaluate the edge device against the STIG
 Once the edge device has rebooted, log in using the credentials defined
