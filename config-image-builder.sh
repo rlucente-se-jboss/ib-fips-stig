@@ -6,7 +6,7 @@
 
 # install image builder and other necessary packages
 dnf -y install osbuild-composer composer-cli cockpit-composer \
-    bash-completion scap-security-guide python3
+    bash-completion scap-security-guide python3 lorax
 
 # enable image builder to start after reboot
 systemctl enable --now osbuild-composer.socket cockpit.socket
