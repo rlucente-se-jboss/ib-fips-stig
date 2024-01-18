@@ -1,0 +1,12 @@
+name = "Pre-STIG-ISO"
+description = "Installer ISO for the Pre STIG rpm-ostree image"
+version = "0.0.1"
+
+[customizations]
+fips = true
+
+[[customizations.user]]
+name = "${EDGE_USER}"
+description = "Admin User"
+password = "${EDGE_PASS_HASH}"
+groups = ["wheel"]
