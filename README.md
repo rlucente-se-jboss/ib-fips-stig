@@ -1,18 +1,16 @@
 # Image Builder with FIPS and STIG
 
 ## Pre-demo setup 
-Start with a minimal install of RHEL 9.3 on baremetal or on a VM. Make
-sure this repository is on your host using either `git clone` or secure
-copy (`scp`).
+Start with a minimal install of CentOS Stream 9 on baremetal or on a
+VM. Make sure this repository is on your host using either `git clone`
+or secure copy (`scp`).
 
-During RHEL installation, configure a regular user with `sudo`
-privileges on the host. These instructions assume that this repository is
-cloned or copied to your user's home directory on the host.
+During CentOS Stream installation, configure a regular user with `sudo`
+privileges on the host. These instructions assume that this repository
+is cloned or copied to your user's home directory on the host.
 
-Login to the host using `ssh`. Make sure that the username and password
-are correct in the `demo.conf` file to authenticate to the
-[Red Hat Customer Portal](https://access.redhat.com) and then run the
-following script both to register and update the system.
+Login to the host using `ssh` and then run the following script to update
+the system.
 
     cd /path/to/ib-fips-stig
     sudo ./register-and-update.sh
@@ -30,17 +28,25 @@ The above script installs and enables the web console and image builder.
 Once you've run the above scripts successfully, setup is complete.
 
 ## Demo
-### Generate the blueprint file
+### Generate the blueprint files
 Generate the blueprint file to prepare the rpm-ostree image to comply
 with some of the controls in the DISA STIG.
 
     oscap xccdf generate fix \
         --fetch-remote-resources \
         --profile xccdf_org.ssgproject.content_profile_stig \
-        --fix-type blueprint /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml \
+        --fix-type blueprint /usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml \
 	> pre-stig-blueprint.toml
 
-### Cleanup the generated blueprint file
+Generate the blueprint file for the installer ISO compose. This makes
+sure that FIPS mode is enabled on the edge device and it provides an
+initial user during installation.
+
+    . demo.conf
+    envsubst '${EDGE_USER} ${EDGE_PASS_HASH}' \
+        < pre-stig-installer.toml.orig > pre-stig-installer.toml
+
+### Cleanup the initial compose blueprint file
 The generated blueprint file `pre-stig-blueprint.toml` will need some
 cleanup to build the rpm-ostree image.
 
@@ -83,21 +89,33 @@ types. The following should be commented out as shown below.
     # mountpoint = "/var/tmp"
     # size = 1073741824
 
-Finally, modify the following stanza, as shown below, since kdump and
-autofs are not installed by default for an ostree type.
+Modify the following stanza, as shown below, since kdump and autofs are
+not installed by default for an ostree type.
 
     [customizations.services]
     enabled = ["usbguard","sshd","chronyd","fapolicyd","firewalld","systemd-journald","rsyslog","auditd","pcscd"]
     # disabled = ["kdump","autofs","debug-shell"]
     disabled = ["debug-shell"]
 
+Add the following stanza, shown below, to add a remote to the edge device
+to pull updates from an upstream server.
+
+    [[customizations.files]]
+    path = "/etc/ostree/remotes.d/upstream.conf"
+    data = """
+    [remote "edge"]
+    url=http://192.168.122.1/ostree/repo/
+    gpg-verify=false
+    """
+
 ### Build the rpm-ostree image
-Push the modified blueprint and initiate the build of the rpm-ostree
-image. The following commands will compose an rpm-ostree image. This
-will be used to install the edge device.
+Push the modified blueprints and initiate the compose of the rpm-ostree
+image. This compose will be used to create the installer ISO.
 
     composer-cli blueprints push pre-stig-blueprint.toml
-    composer-cli compose start-ostree xccdf_org.ssgproject.content_profile_stig edge-commit
+    composer-cli blueprints push pre-stig-installer.toml
+
+    composer-cli compose start-ostree xccdf_org.ssgproject.content_profile_stig edge-container
 
 Use the following command to monitor the build. The status will change
 to FINISHED when the build completes.
@@ -106,58 +124,75 @@ to FINISHED when the build completes.
 
 Press CTRL-C to stop the above command.
 
+### Build the ISO installer
+Identify the UUID for the compose of the rpm-ostree container image.
+
+    composer-cli compose status
+
+To download the container image, type the following command. If this is
+the only compose, you can simply hit TAB instead of typing the UUID.
+
+    composer-cli compose image UUID
+
+Import the container archive and run it to support the ISO installer compose.
+
+    skopeo copy oci-archive:UUID-container.tar \
+        containers-storage:localhost/pre-stig:latest
+    podman run -d --rm -p 8080:8080 pre-stig
+
+Launch the compose of the ISO installer using the previous rpm-ostree compose.
+
+    composer-cli compose start-ostree Pre-STIG-ISO edge-installer \
+        --url http://localhost:8080/repo
+
+Use the following command to monitor the build. The status will change
+to FINISHED when the compose completes.
+
+    watch composer-cli compose status
+
+Press CTRL-C to stop the above command.
+
 ### Generate the kickstart file
-This simple script creates the kickstart file to install the rpm-ostree
-image.
+Now, generate the kickstart file for the ISO installer to automate the
+install by removing all partitions and autopartitioning the disk. This
+also disables kdump and enables the network to use DHCP.
 
-    ./gen-ks.sh
+Use the following command to identify the UUID of the ISO installer compose.
 
+    composer-cli compose status
+
+Download the ISO installer using the following command where UUID matches
+the identifier for the installer compose.
+
+    composer-cli compose image UUID
+
+Create a new kickstart using a base kickstart file and then append the
+existing kickstart content within the ISO installer.
+
+    cp pre-stig.ks.org pre-stig.ks
+    isoinfo -i UUID-installer.iso -x osbuild.ks >> pre-stig.ks
+    
 ### Prepare the boot ISO
-As a workaround to enable FIPS mode, we'll modify an existing
-RHEL 9.3 boot ISO to include the generated kickstart and updated
-kernel command line parameters. First, download the [RHEL 9.3 boot ISO](https://access.redhat.com/downloads/content/rhel).
+*** TODO update to incorporate the kickstart and command line args into the installer compose
 
-Modify the ISO using the following commands to extract the kernel boot
-parameters from the generated blueprint file and point to the correct
-host to pull the rpm-ostree content.
+Modify the ISO installer to append kernel command line parameters and
+the modified kickstart file. Use the following commands to extract the
+kernel boot parameters from the generated blueprint file.
 
-    . demo.conf
-    KERNEL_ARGS="$(grep -A1 kernel pre-stig-blueprint.toml | \
-        grep append | cut -d\" -f2)"
-    KERNEL_ARGS="$KERNEL_ARGS fips=1"
+    KERNEL_ARGS=$(grep -A1 customizations\.kernel pre-stig-blueprint.toml | \
+        grep append | cut -d' ' -f3-)
+
+Append the `KERNEL_ARGS` and replace the kickstart file in the installer
+ISO using the following commands.
 
     sudo mkksiso \
-        -c "${KERNEL_ARGS}" \
+        -c ${KERNEL_ARGS} \
         --ks pre-stig.ks \
-        /path/to/rhel-9.3-x86_64-boot.iso \
+        UUID-installer.iso \
         pre-stig.iso
     sudo chown $USER: pre-stig.iso
 
-In the above commands, `/path/to/` should match the file path to
-the directory holding the downloaded boot ISO. The HOSTIP value is
-determined by the `demo.conf` file and it should match the IP address
-of the image-builder host. Make sure this value is correct in the
-`demo.conf` file.
-
-### Host the rpm-ostree content
-Create a directory to hold the kickstart and the rpm-ostree compose for
-installation to the edge device.
-
-    mkdir ~/pre-stig-content
-    cd ~/pre-stig-content
-
-Download the built rpm-ostree image content. If there is only one compose,
-you can simply hit TAB to get the UUID. Otherwise, determine the UUID
-by listing the finished composes.
-
-    composer-cli compose status
-    composer-cli compose image IMAGE-UUID
-
-Expand the rpm-ostree content and launch a very simple local web server
-to provide the rpm-ostree content to support edge device installs.
-
-    tar xvf IMAGE-UUID-commit.tar
-    python3 -m http.server 8000
+Again, UUID matches the UUID of the composed ISO installer.
 
 ### Install the edge device
 Boot an edge device using the `pre-stig.iso` installer. The installation
