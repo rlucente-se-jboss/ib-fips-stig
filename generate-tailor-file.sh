@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# only enable these stig rules
+# only enable these STIG rules
 #
 RULES=( \
     harden_sshd_ciphers_openssh_conf_crypto_policy \
