@@ -5,22 +5,22 @@ Start with a minimal install of CentOS Stream 9 on baremetal or on a
 VM. Make sure this repository is on your host using either `git clone`
 or secure copy (`scp`).
 
-During CentOS Stream installation, configure a regular user with `sudo`
-privileges on the host. These instructions assume that this repository
-is cloned or copied to your user's home directory on the host.
+During CentOS Stream installation, configure a regular user with
+`sudo` privileges on the host. These instructions assume that this
+repository is cloned or copied to your user's home directory on the host
+(e.g. `~/ib-fips-stig`). The below instructions use that assumption.
 
 Login to the host using `ssh` and then run the following script to update
 the system.
 
-    cd /path/to/ib-fips-stig
+    cd ~/ib-fips-stig
     sudo ./register-and-update.sh
     sudo reboot
 
-In the above commands, `/path/to/ib-fips-stig` should match the file
-path to your `ib-fips-stig` directory.
+After the system reboots, simply run the script to install and configure
+image-builder:
 
-After the system reboots, simply run the script to install image-builder:
-
+    cd ~/ib-fips-stig
     sudo ./config-image-builder.sh
     
 The above script installs and enables the web console and image builder.
@@ -32,6 +32,7 @@ Once you've run the above scripts successfully, setup is complete.
 Generate the blueprint file to prepare the rpm-ostree image to comply
 with some of the controls in the DISA STIG.
 
+    cd ~/ib-fips-stig
     oscap xccdf generate fix \
         --fetch-remote-resources \
         --profile xccdf_org.ssgproject.content_profile_stig \
@@ -167,26 +168,26 @@ the identifier for the installer compose.
     composer-cli compose image UUID
 
 Create a new kickstart using a base kickstart file and then append the
-existing kickstart content within the ISO installer.
+existing kickstart content from the ISO installer.
 
     cp pre-stig.ks.org pre-stig.ks
-    isoinfo -i UUID-installer.iso -x osbuild.ks >> pre-stig.ks
+    sudo mount -o loop UUID-installer.iso /mnt
+    cat /mnt/osbuild.ks >> pre-stig.ks
+    sudo umount /mnt
     
 ### Prepare the boot ISO
-*** TODO update to incorporate the kickstart and command line args into the installer compose
-
 Modify the ISO installer to append kernel command line parameters and
-the modified kickstart file. Use the following commands to extract the
-kernel boot parameters from the generated blueprint file.
+add the modified kickstart file. Use the following commands to extract
+the kernel boot parameters from the generated blueprint file.
 
     KERNEL_ARGS=$(grep -A1 customizations\.kernel pre-stig-blueprint.toml | \
-        grep append | cut -d' ' -f3-)
+        grep append | cut -d\" -f2)
 
 Append the `KERNEL_ARGS` and replace the kickstart file in the installer
 ISO using the following commands.
 
     sudo mkksiso \
-        -c ${KERNEL_ARGS} \
+        -c "${KERNEL_ARGS}" \
         --ks pre-stig.ks \
         UUID-installer.iso \
         pre-stig.iso
@@ -197,7 +198,7 @@ Again, UUID matches the UUID of the composed ISO installer.
 ### Install the edge device
 Boot an edge device using the `pre-stig.iso` installer. The installation
 should occur automatically without user intervention. You can push ENTER
-to kick things off if you don't want to wait for the time to expire.
+to kick things off if you don't want to wait for the boot delay to expire.
 
 ## Evaluate the edge device against the STIG
 Wait for the edge device to reboot following the installation.
@@ -208,6 +209,7 @@ specific controls. The following script uses the `autotailor` command
 to limit the remediation to a handful of high severity rules. On the
 image-builder host, run the following command to create the tailoring file.
 
+    cd ~/ib-fips-stig
     ./generate-tailor-file.sh
 
 Copy the generated file, `ssg-rhel9-ds-tailoring-high-only.xml`, to the
