@@ -212,7 +212,7 @@ image-builder host, run the following command to create the tailoring file.
     cd ~/ib-fips-stig
     ./generate-tailor-file.sh
 
-Copy the generated file, `ssg-rhel9-ds-tailoring-high-only.xml`, to the
+Copy the generated file, `ssg-cs9-ds-tailoring-high-only.xml`, to the
 edge device.
 
 ### Evaluate before any remediation
@@ -221,9 +221,10 @@ use the following command to generate a STIG evaluation report before
 any remediation occurs.
 
     sudo oscap xccdf eval \
+        --fetch-remote-resources \
         --report stig_report_pre_remediation.html \
         --profile xccdf_org.ssgproject.content_profile_stig \
-        /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+        /usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml
 
 You can then download the generated `stig_report_pre_remediation.html`
 file to review it.
@@ -233,10 +234,11 @@ Remediate the high severity STIG failures by using the tailoring file. Use
 the following commands to apply the remediations and reboot the system.
 
     sudo oscap xccdf eval \
+        --fetch-remote-resources \
         --remediate \
-        --tailoring-file ssg-rhel9-ds-tailoring-high-only.xml \
+        --tailoring-file ssg-cs9-ds-tailoring-high-only.xml \
         --profile xccdf_org.ssgproject.content_profile_stig_high_only \
-        /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+        /usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml
 
     sudo reboot
 
@@ -245,9 +247,10 @@ Log back in to the edge device and then use the following command to
 generate a STIG evaluation report after the remediation has run.
 
     sudo oscap xccdf eval \
+        --fetch-remote-resources \
         --report stig_report_post_remediation.html \
         --profile xccdf_org.ssgproject.content_profile_stig \
-        /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+        /usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml
 
 You can then download the generated `stig_report_post_remediation.html`
 file to review it.
