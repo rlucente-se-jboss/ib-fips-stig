@@ -27,7 +27,7 @@ EOF
 for i in $(xmlstarlet sel -N "xccdf=http://checklists.nist.gov/xccdf/1.2" \
   -t -v \
   "//xccdf:Profile[@id='xccdf_org.ssgproject.content_profile_stig']/xccdf:select[@selected='true']/@idref" \
-  /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml | \
+  /usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml | \
   sed 's/xccdf_org.ssgproject.content_rule_//g' )
 do
   echo "    -u $i \\" >> $TMPFILE
