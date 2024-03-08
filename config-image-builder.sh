@@ -18,6 +18,6 @@ source /etc/bash_completion.d/composer-cli
 # add user to weldr group so they don't need to be root to run image builder
 [[ ! -z "$SUDO_USER" ]] && usermod -aG weldr $SUDO_USER
 
-# allow connections to port 8000 to get rpm-ostree content
+# allow connections to port 8000 to get rpm-ostree updates
 firewall-cmd --permanent --add-port=8000/tcp
 firewall-cmd --reload
