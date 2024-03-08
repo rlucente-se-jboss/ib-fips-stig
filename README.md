@@ -6,7 +6,7 @@ and Defense Information Systems Agency (DISA) Security Technical
 Implementation Guide (STIG) controls are applied. The controls within
 the DISA STIG are tailored only to CAT I rules.
 
-*NOTE: FIPS 140-3 libraries are in the process of being validated*
+*NOTE: FIPS 140-3 libraries are [in the process](https://csrc.nist.gov/projects/cryptographic-module-validation-program/modules-in-process/modules-in-process-list) of being validated.*
 
 ## Pre-demo setup 
 Start with a minimal install of CentOS Stream 9 on baremetal or on a
