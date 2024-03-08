@@ -19,5 +19,5 @@ source /etc/bash_completion.d/composer-cli
 [[ ! -z "$SUDO_USER" ]] && usermod -aG weldr $SUDO_USER
 
 # allow connections to port 8000 to get rpm-ostree updates
-firewall-cmd --permanent --add-port=8000/tcp
+firewall-cmd --permanent --add-port=${HOSTPORT}/tcp
 firewall-cmd --reload
