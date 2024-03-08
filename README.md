@@ -1,4 +1,12 @@
 # Image Builder with FIPS and STIG
+This project shows how to install rpm-ostree content to an edge device
+where National Institute of Standards and Technology (NIST) Federal
+Information Processing Standards (FIPS) 140-3 validated cryptography
+and Defense Information Systems Agency (DISA) Security Technical
+Implementation Guide (STIG) controls are applied. The controls within
+the DISA STIG are tailored only to CAT I rules.
+
+*NOTE: FIPS 140-3 libraries are in the process of being validated*
 
 ## Pre-demo setup 
 Start with a minimal install of CentOS Stream 9 on baremetal or on a
@@ -29,8 +37,8 @@ Once you've run the above scripts successfully, setup is complete.
 
 ## Demo
 ### Generate the blueprint files
-Generate the blueprint file to prepare the rpm-ostree image to comply
-with some of the controls in the DISA STIG.
+Generate the blueprint file to prepare the rpm-ostree image to comply with
+controls in the DISA STIG. The list of controls will be tailored later.
 
     cd ~/ib-fips-stig
     oscap xccdf generate fix \
@@ -39,26 +47,21 @@ with some of the controls in the DISA STIG.
         --fix-type blueprint /usr/share/xml/scap/ssg/content/ssg-cs9-ds.xml \
 	> pre-stig-blueprint.toml
 
-Generate the blueprint file for the installer ISO compose. This makes
-sure that FIPS mode is enabled on the edge device and it provides an
-initial user during installation.
+Use the following command to generate the blueprint file for the installer
+ISO compose. Make sure that the parameters in the `demo.conf` file for
+the target storage device on the edge host, the IP address and port
+number for rpm-ostree updates, and the edge user credentials are correct.
 
-    . demo.conf
-    envsubst '${EDGE_USER} ${EDGE_PASS_HASH}' \
-        < pre-stig-installer.toml.orig > pre-stig-installer.toml
+    ./generate-pre-stig-installer.sh
 
-### Cleanup the initial compose blueprint file
-The generated blueprint file `pre-stig-blueprint.toml` will need some
-cleanup to build the rpm-ostree image.
+### Adjust the blueprint files
+The generated blueprint file, `pre-stig-blueprint.toml`, will need
+some slight manual adjustments prior to composing the rpm-ostree and
+ISO images.
 
-Add the following stanza to the list of packages:
-
-    [[packages]]
-    name = "scap-security-guide"
-    version = "*"
-
-Comment out the following stanza, as shown below, since kernel boot
-parameter customizations are not supported for ostree types.
+Comment out the `customizations.kernel` stanza file since these are only
+allowed for the ISO installer compose. The stanza should resemble the
+following after being commented out:
 
     # [customizations.kernel]
     # append = "slub_debug=P page_poison=1 vsyscall=none pti=on audit_backlog_limit=8192 audit=1"
@@ -90,24 +93,13 @@ types. The following should be commented out as shown below.
     # mountpoint = "/var/tmp"
     # size = 1073741824
 
-Modify the following stanza, as shown below, since kdump and autofs are
-not installed by default for an ostree type.
+Modify the following stanza, as shown below, file since kdump and autofs
+are not installed by default for an ostree type.
 
     [customizations.services]
     enabled = ["usbguard","sshd","chronyd","fapolicyd","firewalld","systemd-journald","rsyslog","auditd","pcscd"]
     # disabled = ["kdump","autofs","debug-shell"]
     disabled = ["debug-shell"]
-
-Add the following stanza, shown below, to add a remote to the edge device
-to pull updates from an upstream server.
-
-    [[customizations.files]]
-    path = "/etc/ostree/remotes.d/upstream.conf"
-    data = """
-    [remote "edge"]
-    url=http://192.168.122.1/ostree/repo/
-    gpg-verify=false
-    """
 
 ### Build the rpm-ostree image
 Push the modified blueprints and initiate the compose of the rpm-ostree
@@ -143,7 +135,7 @@ Import the container archive and run it to support the ISO installer compose.
 
 Launch the compose of the ISO installer using the previous rpm-ostree compose.
 
-    composer-cli compose start-ostree Pre-STIG-ISO edge-installer \
+    composer-cli compose start-ostree Pre-STIG-ISO edge-simplified-installer \
         --url http://localhost:8080/repo
 
 Use the following command to monitor the build. The status will change
@@ -170,24 +162,15 @@ the identifier for the installer compose.
 Create a new kickstart using a base kickstart file and then append the
 existing kickstart content from the ISO installer.
 
-    cp pre-stig.ks.org pre-stig.ks
-    sudo mount -o loop UUID-installer.iso /mnt
-    cat /mnt/osbuild.ks >> pre-stig.ks
-    sudo umount /mnt
-    
+    cp pre-stig.ks.orig pre-stig.ks
+    osirrox -indev UUID-installer.iso -concat append pre-stig.ks /osbuild.ks
+   
+where UUID matches the UUID of the composed ISO installer.
+ 
 ### Prepare the boot ISO
-Modify the ISO installer to append kernel command line parameters and
-add the modified kickstart file. Use the following commands to extract
-the kernel boot parameters from the generated blueprint file.
-
-    KERNEL_ARGS=$(grep -A1 customizations\.kernel pre-stig-blueprint.toml | \
-        grep append | cut -d\" -f2)
-
-Append the `KERNEL_ARGS` and replace the kickstart file in the installer
-ISO using the following commands.
+Modify the ISO installer to add the modified kickstart file.
 
     sudo mkksiso \
-        -c "${KERNEL_ARGS}" \
         --ks pre-stig.ks \
         UUID-installer.iso \
         pre-stig.iso
