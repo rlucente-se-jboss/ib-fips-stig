@@ -11,7 +11,6 @@ description = "Simplified Installer ISO for the Pre STIG rpm-ostree image"
 version = "0.0.1"
 
 [customizations]
-fips = true
 installation_device = "${EDGE_INSTALL_DEV}"
 
 [[customizations.user]]
