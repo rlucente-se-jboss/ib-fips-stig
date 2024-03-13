@@ -133,7 +133,7 @@ Import the container archive and run it to support the ISO installer compose.
 
 Launch the compose of the ISO installer using the previous rpm-ostree compose.
 
-    composer-cli compose start-ostree Pre-STIG-ISO edge-simplified-installer \
+    composer-cli compose start-ostree Pre-STIG-ISO edge-installer \
         --url http://localhost:8080/repo
 
 Use the following command to monitor the build. The status will change
@@ -166,9 +166,12 @@ existing kickstart content from the ISO installer.
 where UUID matches the UUID of the composed ISO installer.
  
 ### Prepare the boot ISO
-Modify the ISO installer to add the modified kickstart file.
+Modify the ISO installer to add the modified kickstart file and the
+kernel arguments.
 
+    . demo.conf
     sudo mkksiso \
+        -c "$KERNEL_ARGS" \
         --ks pre-stig.ks \
         UUID-installer.iso \
         pre-stig.iso
