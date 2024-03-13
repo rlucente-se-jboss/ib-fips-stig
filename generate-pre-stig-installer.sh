@@ -11,19 +11,14 @@ description = "Simplified Installer ISO for the Pre STIG rpm-ostree image"
 version = "0.0.1"
 
 [customizations]
-installation_device = "${EDGE_INSTALL_DEV}"
+fips = true
 
 [[customizations.user]]
 name = "${EDGE_USER}"
 description = "Admin User"
 password = "${EDGE_PASS_HASH}"
 groups = ["wheel"]
-
 EOF
-
-# add the kernel customizations
-grep -A1 customizations.kernel pre-stig-blueprint.toml \
-    >> pre-stig-installer.toml
 
 # add needed packages and append the remote for rpm-ostree updates for
 # the edge device
