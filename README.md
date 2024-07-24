@@ -7,10 +7,18 @@ Implementation Guide (STIG) controls are applied. The controls within
 the DISA STIG are tailored only to CAT I rules.
 
 ## Pre-demo setup 
-Start with a minimal install of RHEL 9.4 either on baremetal or on a guest
-VM. Use UEFI firmware, if able to, when installing your system. During
-RHEL installation, configure a regular user with `sudo` privileges on
-the host.
+Start with a minimal install of RHEL 9.4 either on baremetal or on a
+guest VM. Use UEFI firmware, if able to, when installing your system.
+
+Make sure to enable FIPS mode when installing RHEL as this host is used
+to generate content for the edge device which will also be configured
+in FIPS mode.  When the installer first boots, select `Install Red Hat
+Enterprise Linux 9.4` on the GRUB boot menu and then press `e` to edit
+the boot commandline. Add `fips=1` to the end of the line that begins with
+`linuxefi` and then press CTRL-X to continue booting.
+
+During RHEL installation, configure a regular user with `sudo` privileges
+on the host.
 
 These instructions assume that this repository is cloned or copied to
 your user's home directory on the host (e.g. `~/ib-fips-stig`). The
@@ -36,7 +44,7 @@ The above script installs and enables the web console and image builder.
 Once you've run the above scripts successfully, setup is complete.
 
 ## Demo
-### Generate the blueprint file
+### Generate the blueprint files
 Generate the blueprint file to prepare the rpm-ostree image to comply
 with some of the controls in the DISA STIG.
 
@@ -102,6 +110,8 @@ types. The following should be commented out as shown below.
     # mountpoint = "/var/tmp"
     # size = 1073741824
 
+Save the file after all the above edits are complete.
+
 ### Build the rpm-ostree image
 Push the modified blueprints and initiate the compose of the rpm-ostree
 image. The following commands will compose an rpm-ostree image. This
@@ -155,7 +165,8 @@ Now, generate the kickstart file for the ISO installer to automate the
 install by removing all partitions and autopartitioning the disk. This
 also disables kdump and enables the network to use DHCP.
 
-Use the following command to identify the UUID of the ISO installer compose.
+Use the following command to identify the UUID of the ISO installer
+compose.
 
     composer-cli compose status
 
