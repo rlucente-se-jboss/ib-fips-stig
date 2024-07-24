@@ -1,0 +1,26 @@
+##
+## Initial ostree install
+##
+
+# set locale defaults for the Install
+lang en_US.UTF-8
+keyboard us
+timezone UTC
+
+# initialize any invalid partition tables and destroy all of their contents
+zerombr
+
+# Basic partitioning
+clearpart --all --initlabel --disklabel=gpt
+reqpart --add-boot
+part / --grow --fstype xfs
+
+# poweroff after installation is successfully completed
+poweroff
+
+# installation will run in text mode
+text
+
+# activate network devices and configure with DHCP
+network --bootproto=dhcp --noipv6
+
