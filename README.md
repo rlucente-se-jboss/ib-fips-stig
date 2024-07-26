@@ -7,8 +7,11 @@ Implementation Guide (STIG) controls are applied. The controls within
 the DISA STIG are tailored only to CAT I rules.
 
 ## Pre-demo setup 
-Start with a minimal install of RHEL 9.4 either on baremetal or on a
-guest VM. Use UEFI firmware, if able to, when installing your system.
+Start with a minimal install of RHEL 9.4 either on baremetal or on a guest
+VM. Use UEFI firmware, if able to, when installing your system. Also make
+sure there's sufficient disk space on the RHEL 9.4 instance to support
+the image-builder composes. I typically configure a 128 GiB disk on the
+guest VM.
 
 Make sure to enable FIPS mode when installing RHEL as this host is used
 to generate content for the edge device which will also be configured
