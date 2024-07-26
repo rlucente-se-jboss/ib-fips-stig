@@ -39,7 +39,10 @@ image-builder:
     cd ~/ib-fips-stig
     sudo ./config-image-builder.sh
     
-The above script installs and enables the web console and image builder.
+The above script installs and enables the web console and image
+builder. Make sure to log off and login again to refresh the session
+since your user was added to the `weldr` group for running image-builder
+composes.
 
 Once you've run the above scripts successfully, setup is complete.
 
