@@ -133,12 +133,17 @@ to FINISHED when the build completes.
 Press CTRL-C to stop the above command.
 
 ### Build the ISO installer
-Identify the UUID for the compose of the rpm-ostree container image.
+Identify the UUID for the compose of the rpm-ostree
+container image. The UUID will be a multi-character value like
+`4c9665d2-9c3e-4a76-9a68-78e7174a47d3` or something similar. Make
+sure to substitute the actual value everywhere `UUID` appears in the
+commands below.
 
     composer-cli compose status
 
-To download the container image, type the following command. If this is
-the only compose, you can simply hit TAB instead of typing the UUID.
+To download the container image, type the following command. If
+this is the only compose, you can simply hit TAB instead of
+typing the UUID.
 
     composer-cli compose image UUID
 
